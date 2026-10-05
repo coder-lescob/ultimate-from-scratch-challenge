@@ -13,7 +13,7 @@ CPIO := $(BUILD)/rootfs.cpio
 QEMU := qemu-system-riscv32
 
 # disk image
-DISK := $(BUILD)/disk.img
+DISK := $(ROOT)/disk/disk.img
 
 # log file
 LOGFILE := $(BUILD)/session.log

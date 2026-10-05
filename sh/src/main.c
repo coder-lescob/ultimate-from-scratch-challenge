@@ -2,7 +2,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-int main(int argc, char **argv) {
+int main(void) {
     printf("Welcome to the ultimate bootstrapping challenge!\n\n");
 
     char input[512]; // why 512? no clue
