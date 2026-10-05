@@ -8,9 +8,8 @@ KERNELARGS := console=ttyS0 rdinit=/init quiet loglevel=0
 # the subdirectories
 SUBDIRS := init
 
-# the cpio archive
+# the cpio archive and emulator
 CPIO := rootfs.cpio
-
 QEMU := qemu-system-riscv32
 
 # compile all
