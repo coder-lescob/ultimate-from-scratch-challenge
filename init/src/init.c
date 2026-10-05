@@ -18,8 +18,24 @@ int main(void) {
 
 #undef DUMMY_STR
 
-    // let the challenge begin
-    printf("Welcome to the ultimate bootstrapping challenge !\n");
+    // open tty1
+    int fd = open("/dev/tty1", O_RDWR);
+    if (fd < 0) goto failure;
+
+    // use tty1 as stdio
+    dup2(fd, 0);
+    dup2(fd, 1);
+    dup2(fd, 2);
+
+    // close fd
+    if (fd > 2) {
+        close(fd);
+    }
+
+    // log success
+    printf("[ INIT ] tty1 enabled\n");
+    printf("[ INIT ] system initialization successful !\n");
+    printf("[ INIT ] TODO: now launch a shell\n");
 
     while (1)
         pause();

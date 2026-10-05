@@ -3,7 +3,7 @@
 # get the kernel and define its arguments
 KERNEL_DIR := kernel
 KERNEL     := $(KERNEL_DIR)/Image
-KERNELARGS := console=ttyS0 rdinit=/init quiet loglevel=0
+KERNELARGS := console=ttyS0 rdinit=/init
 
 # the subdirectories
 SUBDIRS := init
@@ -26,7 +26,9 @@ run: build
 		-m 128M \
 		-kernel $(KERNEL) \
 		-initrd $(CPIO) \
-		-nographic \
+		-display gtk \
+		-serial stdio \
+		-device bochs-display \
 		-append "$(KERNELARGS)"
 
 
