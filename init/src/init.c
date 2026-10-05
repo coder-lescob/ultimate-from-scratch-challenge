@@ -26,7 +26,7 @@ int main(void) {
     int fd = open("/dev/tty1", O_RDWR);
     if (fd < 0) goto failure;
 
-    // use tty1 as stdout and stderr
+    // use tty1 as stdio
     dup2(fd, 0);
     dup2(fd, 1);
     dup2(fd, 2);
