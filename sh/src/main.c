@@ -1,11 +1,15 @@
 #include <stdio.h>
+#include <unistd.h>
 
 int main(int argc, char **argv) {
-    printf("Welcome to the ultimate bootstrapping challenge!\n");
+    printf("Welcome to the ultimate bootstrapping challenge!\n\n");
 
-    for (int i = 0; i < argc; i++) {
-        printf("[ ARG %d ] %s\n", i, argv[i]);
-    }
+    // show the little indicator
+    printf("/ # ");
+    fflush(stdout);
+
+    while (1)
+        pause();
 
     return 0;
 }
