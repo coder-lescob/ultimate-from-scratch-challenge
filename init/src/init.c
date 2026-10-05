@@ -4,10 +4,7 @@
 #include <sys/ioctl.h>
 #include <sys/mount.h>
 
-#define NAME_COLOR  "\x1b[38;5;28m"
-#define RESET_STYLE "\x1b[0m"
-
-#define LOG_NAME "[ " NAME_COLOR "INIT" RESET_STYLE " ] "
+#define LOG_NAME "[ INIT ] "
 
 int main(void) {
 
@@ -29,7 +26,7 @@ int main(void) {
     int fd = open("/dev/tty1", O_RDWR);
     if (fd < 0) goto failure;
 
-    // use tty1 as stdio
+    // use tty1 as stdout and stderr
     dup2(fd, 0);
     dup2(fd, 1);
     dup2(fd, 2);

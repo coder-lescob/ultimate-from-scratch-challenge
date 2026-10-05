@@ -15,6 +15,9 @@ QEMU := qemu-system-riscv32
 # disk image
 DISK := $(BUILD)/disk.img
 
+# log file
+LOGFILE := $(BUILD)/session.log
+
 # compile all
 build: $(SUBDIRS) cpio
 
@@ -31,8 +34,9 @@ run: build
 		-kernel $(KERNEL) \
 		-initrd $(CPIO) \
 		-display gtk \
-		-serial stdio \
 		-device bochs-display \
+		-device virtio-keyboard-pci \
+		-serial file:$(LOGFILE) \
 		-drive file=$(DISK),format=raw,if=virtio \
 		-append "$(KERNELARGS)"
 
