@@ -36,6 +36,7 @@ $(SUBDIRS):
 	$(MAKE) -C $@
 
 clean:
-	rm -rf $(BUILD)
+	@rm -rf build
+	@echo CLEAN
 
 .PHONY: build $(SUBDIRS)

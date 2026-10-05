@@ -16,4 +16,4 @@ BUILD := $(ROOT)/build
 $(BUILD)/%.o: $(ROOT)/%.c
 	@mkdir -p $(dir $@)
 	@$(RISCVCC) -c $(CFLAGS) $< -o $@
-	@echo RISCVCC $@
+	@echo RISCVCC $(shell basename $@)

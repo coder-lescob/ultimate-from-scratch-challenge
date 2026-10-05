@@ -10,6 +10,6 @@ BIN     := $(ROOTFS)/init
 all: $(TARGET)
 $(TARGET): $(OBJS)
 	@$(RISCVCC) $(CFLAGS) $(LDFLAGS) $(OBJS) -o $(TARGET)
-	@echo RISCVCC $(TARGET)
+	@echo RISCVCC $(NAME)
 	@cp $(TARGET) $(BIN)
-	@echo COPY $(BIN)
+	@echo COPY $(NAME) TO ROOTFS
