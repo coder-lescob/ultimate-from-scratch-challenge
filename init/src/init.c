@@ -20,6 +20,8 @@ int main(void) {
     printf(LOG_NAME "mounted /proc\n");
     if (mount(DUMMY_STR, "/dev", "devtmpfs", 0, "") != 0) goto failure; 
     printf(LOG_NAME "mounted /dev\n");
+    if (mount("/dev/vda", "/mnt", "ext4", 0, "") != 0) goto failure;
+    printf(LOG_NAME "mounted disk\n");
 
 #undef DUMMY_STR
 

@@ -19,6 +19,7 @@ DISK := $(BUILD)/disk.img
 build: $(SUBDIRS) cpio
 
 cpio:
+	@mkdir -p $(ROOTFS)/bin $(ROOTFS)/dev $(ROOTFS)/proc $(ROOTFS)/sys $(ROOTFS)/tmp $(ROOTFS)/mnt
 	@cd $(ROOTFS) && find . -print | cpio -o -H newc > $(CPIO) && cd ..
 	@echo CPIO ARCHIVE CREATED
 
