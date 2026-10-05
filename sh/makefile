@@ -12,4 +12,4 @@ $(TARGET): $(OBJS)
 	@$(RISCVCC) $(CFLAGS) $(LDFLAGS) $(OBJS) -o $(TARGET)
 	@echo RISCVCC $(NAME)
 	@cp $(TARGET) $(BIN)
-	@echo COPY $(NAME) TO ROOTFS
+	@echo COPY $(NAME) TO ROOTFS/bin

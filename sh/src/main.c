@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 int main(void) {
-    printf("Welcome to the ultimate bootstrapping challenge!\n\n");
+    printf("Welcome to the ultimate \"from scratch\" challenge!\n\n");
 
     char input[512]; // why 512? no clue
 

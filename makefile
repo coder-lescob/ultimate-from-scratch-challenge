@@ -1,5 +1,8 @@
 -include build.mk
 
+# don't print entering directory
+MAKEFLAGS += --no-print-directory
+
 # get the kernel and define its arguments
 KERNEL_DIR := kernel
 KERNEL     := $(KERNEL_DIR)/Image
@@ -42,7 +45,7 @@ run: build
 
 
 $(SUBDIRS):
-	$(MAKE) -C $@
+	@$(MAKE) -C $@
 
 clean:
 	@rm -rf build
