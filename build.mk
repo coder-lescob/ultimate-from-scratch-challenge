@@ -3,7 +3,7 @@ ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 ROOTFS := $(ROOT)/rootfs
 
 # get the compiler
-TOOLCHAIN := $(ROOT)/toolchain/riscv32/bin
+TOOLCHAIN := $(ROOT)/toolchain/
 RISCVCC   := $(TOOLCHAIN)/riscv32-unknown-linux-gnu-gcc
 
 # c and ld flags
