@@ -9,14 +9,14 @@ KERNELARGS := console=ttyS0 rdinit=/init
 SUBDIRS := init
 
 # the cpio archive and emulator
-CPIO := rootfs.cpio
+CPIO := $(BUILD)/rootfs.cpio
 QEMU := qemu-system-riscv32
 
 # compile all
 build: $(SUBDIRS) cpio
 
 cpio:
-	@cd $(ROOTFS) && find . -print | cpio -o -H newc > ../$(CPIO) && cd ..
+	@cd $(ROOTFS) && find . -print | cpio -o -H newc > $(CPIO) && cd ..
 	@echo CPIO ARCHIVE CREATED
 
 run: build
