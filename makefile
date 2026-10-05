@@ -12,6 +12,9 @@ SUBDIRS := init sh
 CPIO := $(BUILD)/rootfs.cpio
 QEMU := qemu-system-riscv32
 
+# disk image
+DISK := $(BUILD)/disk.img
+
 # compile all
 build: $(SUBDIRS) cpio
 
@@ -29,6 +32,7 @@ run: build
 		-display gtk \
 		-serial stdio \
 		-device bochs-display \
+		-drive file=$(DISK),format=raw,if=virtio \
 		-append "$(KERNELARGS)"
 
 
