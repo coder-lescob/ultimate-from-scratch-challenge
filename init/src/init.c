@@ -4,17 +4,22 @@
 #include <sys/ioctl.h>
 #include <sys/mount.h>
 
+#define NAME_COLOR  "\x1b[38;5;28m"
+#define RESET_STYLE "\x1b[0m"
+
+#define LOG_NAME "[ " NAME_COLOR "INIT" RESET_STYLE " ] "
+
 int main(void) {
 
 #define DUMMY_STR "none"
 
     // try to mount everything
     if (mount(DUMMY_STR, "/sys", "sysfs", 0, "") != 0) goto failure; 
-    printf("[ INIT ] mounted /sys\n");
+    printf(LOG_NAME "mounted /sys\n");
     if (mount(DUMMY_STR, "/proc", "proc", 0, "") != 0) goto failure; 
-    printf("[ INIT ] mounted /proc\n");
+    printf(LOG_NAME "mounted /proc\n");
     if (mount(DUMMY_STR, "/dev", "devtmpfs", 0, "") != 0) goto failure; 
-    printf("[ INIT ] mounted /dev\n");
+    printf(LOG_NAME "mounted /dev\n");
 
 #undef DUMMY_STR
 
@@ -33,15 +38,27 @@ int main(void) {
     }
 
     // log success
-    printf("[ INIT ] tty1 enabled\n");
-    printf("[ INIT ] system initialization successful !\n");
-    printf("[ INIT ] TODO: now launch a shell\n");
+    printf(LOG_NAME "tty1 enabled\n");
+    printf(LOG_NAME "system initialization successful !\n");
+    printf(LOG_NAME "lauching shell\n");
+
+    // launch a shell
+    if (fork() == 0) {
+        // child process
+#define SHELL "/bin/sh"
+        execl(SHELL, SHELL, (char *)NULL);
+#undef SHELL
+
+        // error
+        perror(LOG_NAME "unable to launch shell");
+        return 1; // trigger kernel panic!
+    }
 
     while (1)
         pause();
 
 failure:
-    perror("[ INIT ] critical failure");
+    perror(LOG_NAME "critical failure");
 
     return 0;
 }
