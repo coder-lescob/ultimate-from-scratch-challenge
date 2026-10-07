@@ -25,7 +25,7 @@ LOGFILE := $(BUILD)/session.log
 build: $(SUBDIRS) cpio
 
 cpio:
-	@mkdir -p $(ROOTFS)/bin $(ROOTFS)/dev $(ROOTFS)/proc $(ROOTFS)/sys $(ROOTFS)/tmp $(ROOTFS)/mnt $(ROOTFS)/home
+	@mkdir -p $(ROOTFS)/bin $(ROOTFS)/dev $(ROOTFS)/proc $(ROOTFS)/sys $(ROOTFS)/tmp $(ROOTFS)/mnt $(ROOTFS)/~
 	@cd $(ROOTFS) && find . -print | cpio -o -H newc > $(CPIO) && cd ..
 	@echo CPIO ARCHIVE CREATED
 

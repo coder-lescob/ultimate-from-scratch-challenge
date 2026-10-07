@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdbool.h>
 #include <string.h>
 #include <stddef.h>
 #include <errno.h>
@@ -56,7 +57,7 @@ int run_cmd(char *command) {
         return 0;
     }
 
-    if (run_binary_from_bin(cmd_name, lexer) == 0) {
+    if (run_binary(cmd_name, lexer) == 0) {
         return 0; // success!!
     }
 
@@ -68,21 +69,39 @@ int run_cmd(char *command) {
 /**
  * try to run the command from a binary in /bin
  */
-int run_binary_from_bin(char *cmd, char **lexer) {
+int run_binary(char *cmd, char **lexer) {
     if (cmd == NULL || lexer == NULL) return -1;
 
     // create the path
     char path[1024];
-    snprintf(path, sizeof(path) - 1, "/bin/%s", cmd);
+    bool in_cwd = false;
+    if (strlen(cmd) > 2 && cmd[0] == '.' && cmd[1] == '/') {
+        // binary in the cwd
+        in_cwd = true;
+        strncpy(path, cmd, sizeof(path) - 1);
+    }
+    else {
+        // binary in /bin
+        snprintf(path, sizeof(path) - 1, "/bin/%s", cmd);
+    }
 
     // try open the file:
     struct stat statbuffer;
     if (stat(path, &statbuffer) != 0) {
         // file doesn't exist!!
+        if (in_cwd) {
+            fprintf(stderr, "sh: cannot execute %s: no such file or directory\n", path);
+            return 0;
+        }
         return -1;
     }
 
     if (S_ISDIR(statbuffer.st_mode)) {
+        if (in_cwd) {
+            fprintf(stderr, "sh: cannot execute %s: is a directory\n", path);
+            return 0;
+        }
+
         return -1; // connot execute directory!
     }
 
@@ -100,7 +119,7 @@ int run_binary_from_bin(char *cmd, char **lexer) {
         execv(path, arglist.argv);
 
         // oopsi
-        fprintf(stderr, "sh: couldn't execute %s: %s", path, strerror(errno));
+        fprintf(stderr, "sh: couldn't execute %s: %s\n", path, strerror(errno));
         exit(1);
     }
     else if (child == -1) {
@@ -158,13 +177,15 @@ void display_cwd() {
     char buf[512]; // 512??
     getcwd(buf, sizeof(buf) - 1);
 
-    if (strncmp(buf, "/home", sizeof(buf) - 1) == 0) {
-        // replace buffer content with '#'
-        memset(buf, 0, sizeof(buf));
-        buf[0] = '#';
-    }
+    #define COLOR_RED "\x1b[38;5;196m"
+    #define RESET_COL "\x1b[0m"
 
-    printf("/ %s ", buf);
+    if (strlen(buf) >= 2 && buf[0] == '/' && buf[1] == '~') {
+        printf(COLOR_RED "root" RESET_COL "@challenge %s # ", buf+1);
+    }
+    else {
+        printf(COLOR_RED "root" RESET_COL "@challenge %s # ", buf);
+    }
 }
 
 static int realloc_arglist(struct ArgList *arglist, int new_argcapacity) {
@@ -265,11 +286,16 @@ void builtin_run_cd(char **lexer) {
         fprintf(stderr, "cd: path shall be at most 511 characters long.\n");
         return;
     }
+    // if end of stream
+    else if (success == -2) {
+        // default ~ aka home
+        strcpy(path, "/~"); // 6 < 512 so no overflow possible!
+    }
 
-    // if end of stream or path == '#' then replace the path by /home
-    if (success == -2 || strncmp(path, "#", sizeof(path) - 1) == 0) {
-        // '#' is alias for /home
-        strcpy(path, "/home"); // 6 < 512 so no overflow possible!
+    if (strlen(path) >= 1 && path[0] == '~') {
+        char tmp[512];
+        strncpy(tmp, path, sizeof(tmp) - 1);
+        snprintf(path, sizeof(path) - 1, "/%s", tmp);
     }
 
     // change the directory!
@@ -295,9 +321,10 @@ void builtin_run_ls(char **lexer) {
         path[0] = '.';
     }
 
-    if (strncmp(path, "#", sizeof(path) - 1) == 0) {
-        // '#' is alias for /home
-        strcpy(path, "/home"); // 6 < 512 so no overflow possible!
+    if (strlen(path) >= 1 && path[0] == '~') {
+        char tmp[512];
+        strncpy(tmp, path, sizeof(tmp) - 1);
+        snprintf(path, sizeof(path) - 1, "/%s", tmp);
     }
 
     // open the directory

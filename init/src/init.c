@@ -30,6 +30,12 @@ void reap_zombie_child(int sig) {
 
 int main(void) {
 
+    pid_t pid = getpid();
+    if (pid != 1) {
+        fprintf(stderr, LOG_NAME "init must be launched as PID 1, current: %d\n", pid);
+        return 1;
+    }
+
 #define DUMMY_STR "none"
 
     // try to mount everything
@@ -39,7 +45,7 @@ int main(void) {
     printf(LOG_NAME "mounted /proc\n");
     if (mount(DUMMY_STR, "/dev", "devtmpfs", 0, "") != 0) goto failure; 
     printf(LOG_NAME "mounted /dev\n");
-    if (mount("/dev/vda", "/home", "ext4", 0, "") != 0) goto failure;
+    if (mount("/dev/vda", "/~", "ext4", 0, "") != 0) goto failure;
     printf(LOG_NAME "mounted disk\n");
 
 #undef DUMMY_STR
@@ -79,7 +85,7 @@ int main(void) {
     // launch a shell
     if ((sh = fork()) == 0) {
         // change the current working directory to /mnt
-        if (chdir("/home") != 0) {
+        if (chdir("/~") != 0) {
             perror("unable to change directory");
         };
 

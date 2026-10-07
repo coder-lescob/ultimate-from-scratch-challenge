@@ -19,7 +19,7 @@ int run_cmd(char *command);
 /**
  * try to run the command from a binary in /bin
  */
-int run_binary_from_bin(char *cmd, char **lexer);
+int run_binary(char *cmd, char **lexer);
 
 /**
  * get the next token 0 success -1 overflow or invalid
