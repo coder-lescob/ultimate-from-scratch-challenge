@@ -9,7 +9,7 @@ KERNEL     := $(KERNEL_DIR)/Image
 KERNELARGS := console=ttyS0 rdinit=/init
 
 # the subdirectories
-SUBDIRS := init sh
+SUBDIRS := init sh mkdir
 
 # the cpio archive and emulator
 CPIO := $(BUILD)/rootfs.cpio
@@ -25,7 +25,7 @@ LOGFILE := $(BUILD)/session.log
 build: $(SUBDIRS) cpio
 
 cpio:
-	@mkdir -p $(ROOTFS)/bin $(ROOTFS)/dev $(ROOTFS)/proc $(ROOTFS)/sys $(ROOTFS)/tmp $(ROOTFS)/mnt
+	@mkdir -p $(ROOTFS)/bin $(ROOTFS)/dev $(ROOTFS)/proc $(ROOTFS)/sys $(ROOTFS)/tmp $(ROOTFS)/mnt $(ROOTFS)/home
 	@cd $(ROOTFS) && find . -print | cpio -o -H newc > $(CPIO) && cd ..
 	@echo CPIO ARCHIVE CREATED
 

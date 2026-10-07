@@ -1,21 +1,26 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
+
+#include "interpreter.h"
 
 int main(void) {
-    printf("Welcome to the ultimate \"from scratch\" challenge!\n\n");
-
     char input[512]; // why 512? no clue
+    
+    // print a greating message
+    printf("Welcome to the ultimate \"from scratch\" challenge!\n\n");
+    int last_return_value = 0;
 
     while (1) {
-
-        // show the little indicator
-        printf("/ # ");
+        
+        // display the cwd indicator
+        display_cwd();
         fflush(stdout);
 
-        // read input TODO: interprete it!
+        // read input and interprete it!
         fgets(input, sizeof(input) - 1, stdin);
-        printf("%s\n", input);
+        last_return_value = run_cmd(input);
     }   
 
     return 0;
