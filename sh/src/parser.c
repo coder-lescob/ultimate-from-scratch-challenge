@@ -17,6 +17,11 @@ struct Command parse_cmd(struct Lexer *lexer) {
     }
 
     struct Token cmd_name = lexer_next_token(lexer);
+
+    if (cmd_name.type == TOKEN_NULL) {
+        return (struct Command) { .cmd = NULL, };
+    }
+
     struct ArgList arglist = { 0 };
 
     // push the cmd name

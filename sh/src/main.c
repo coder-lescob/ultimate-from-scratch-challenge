@@ -25,6 +25,9 @@ int main(void) {
         struct Lexer lexer = { input };
         struct Command cmd = parse_cmd(&lexer);
         last_return_value = run_cmd(cmd);
+
+        // reset style to text mode
+        printf("\017");
     }   
 
     return 0;

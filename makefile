@@ -9,7 +9,7 @@ KERNEL     := $(KERNEL_DIR)/Image
 KERNELARGS := console=ttyS0 rdinit=/init
 
 # the subdirectories
-SUBDIRS := init sh mkdir
+SUBDIRS := init sh mkdir cat
 
 # the cpio archive and emulator
 CPIO := $(BUILD)/rootfs.cpio
