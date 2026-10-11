@@ -86,7 +86,7 @@ int main(void) {
     if ((sh = fork()) == 0) {
         // change the current working directory to /mnt
         if (chdir("/~") != 0) {
-            perror("unable to change directory");
+            perror("sh: unable to change cwd to ~");
         };
 
         // child process

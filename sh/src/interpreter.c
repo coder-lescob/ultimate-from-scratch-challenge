@@ -1,4 +1,7 @@
 #include "interpreter.h"
+#include "token.h"
+#include "lexer.h"
+#include "parser.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,39 +20,34 @@
 /**
  * runs a command in the terminal
  */
-int run_cmd(char *command) {
+int run_cmd(struct Command command) {
 
-    // create a "lexer"
-    char **lexer = &command;
+    // EOS nothing there to show
+    if (command.cmd == NULL) {
+        return 0;
+    }
 
     // get the command name
-    char cmd_name[64]; // why??
-    int success = get_next_token(lexer, cmd_name, sizeof(cmd_name) - 1);
-    if (success == -1) {
-        fprintf(stderr, "commands names shall be less than or 63 long\n");
-        return -1;
-    }
-    // end of stream
-    else if (success == -2) {
+    size_t cmdlen = strlen(command.cmd);
+    char cmd_name[cmdlen + 1];
+    strncpy(cmd_name, command.cmd, cmdlen);
+
+    if (strcmp(cmd_name, "cd") == 0) {
+        builtin_run_cd(&command);
         return 0;
     }
 
-    if (strncmp(cmd_name, "cd", sizeof(cmd_name) - 1) == 0) {
-        builtin_run_cd(lexer);
+    if (strcmp(cmd_name, "ls") == 0) {
+        builtin_run_ls(&command);
         return 0;
     }
 
-    if (strncmp(cmd_name, "ls", sizeof(cmd_name) - 1) == 0) {
-        builtin_run_ls(lexer);
-        return 0;
-    }
-
-    if (strncmp(cmd_name, "exit", sizeof(cmd_name) - 1) == 0) {
+    if (strcmp(cmd_name, "exit") == 0) {
         printf("[ EXIT SH ]\n");
         exit(0);
     }
 
-    if (strncmp(cmd_name, "clear", sizeof(cmd_name) - 1) == 0) {
+    if (strcmp(cmd_name, "clear") == 0) {
         // go to home
         // erase the buffer
         // erase the scroll buffer
@@ -57,66 +55,103 @@ int run_cmd(char *command) {
         return 0;
     }
 
-    if (run_binary(cmd_name, lexer) == 0) {
+    if (run_binary(&command) == 0) {
+        free_command(&command);
         return 0; // success!!
     }
 
     // unknown command
     fprintf(stderr, "unknown command: '%s'\n", cmd_name);
+    free_command(&command);
     return 1;
 }
 
 /**
  * try to run the command from a binary in /bin
  */
-int run_binary(char *cmd, char **lexer) {
-    if (cmd == NULL || lexer == NULL) return -1;
+int run_binary(struct Command *cmd) {
+    if (cmd == NULL) return -1;
 
-    // create the path
-    char path[1024];
+    // get the path
+    char *path;
+    size_t pathlen = strlen(cmd->cmd);
     bool in_cwd = false;
-    if (strlen(cmd) > 2 && cmd[0] == '.' && cmd[1] == '/') {
+    if (pathlen > 2 && cmd->cmd[0] == '.' && cmd->cmd[1] == '/') {
         // binary in the cwd
         in_cwd = true;
-        strncpy(path, cmd, sizeof(path) - 1);
+        path = cmd->cmd;
     }
     else {
         // binary in /bin
-        snprintf(path, sizeof(path) - 1, "/bin/%s", cmd);
+        path = calloc(pathlen + 6, sizeof(char)); // "/bin/" is 5 characters long + null is 6
+        snprintf(path, pathlen + 6, "/bin/%s", cmd->cmd); // write to path /bin/cmd_name
+
+        // free the cmd because it's copied to path
+        free(cmd->cmd);
+        cmd->cmd = NULL;
+
+        pathlen += 5;
     }
 
     // try open the file:
     struct stat statbuffer;
     if (stat(path, &statbuffer) != 0) {
+        
         // file doesn't exist!!
         if (in_cwd) {
             fprintf(stderr, "sh: cannot execute %s: no such file or directory\n", path);
+            free(path);
             return 0;
         }
+        free(path);
         return -1;
     }
 
     if (S_ISDIR(statbuffer.st_mode)) {
         if (in_cwd) {
             fprintf(stderr, "sh: cannot execute %s: is a directory\n", path);
+            free(path);
             return 0;
         }
-
-        return -1; // connot execute directory!
+        free(path);
+        return -1; // connot execute directory! but since /bin/dirname, just say that you don't know it's a commmand
     }
 
-    struct ArgList arglist = { 0 };
-    push_arg(&arglist, path, sizeof(path));
-    if (get_arglist(lexer, &arglist) != 0) {
-        free_arglist(&arglist);
-        return -1;
-    }
+    // push NULL to statisfy execve
+    push_arg(&cmd->args, NULL, 0);
 
     pid_t child;
     if ((child = fork()) == 0) {
+        // redirection
+        if (cmd->fstdin != NULL) {
+            // redirect to there!
+            int fd = open(cmd->fstdin, O_RDONLY);
+            if (fd == -1) {
+                perror("sh: unable to redirect stream");
+                exit(1);
+            }
+            dup2(fd, 0); // copy fd to stdin
+
+            // close fd
+            if (fd > 0) close(fd);
+        }
+        if (cmd->fstdout != NULL) {
+            // redirect to there!
+            int fd = open(cmd->fstdout, O_WRONLY | O_CREAT | O_TRUNC);
+            if (fd == -1) {
+                perror("sh: unable to redirect stream");
+                exit(1);
+            }
+            dup2(fd, 1); // copy fd to stdout
+            dup2(fd, 2); // copy fd to stderr
+
+            // close fd
+            if (fd > 2) close(fd);
+        }
+
         // new process here
         // fine linux will free it up for the child
-        execv(path, arglist.argv);
+        execv(path, cmd->args.argv);
 
         // oopsi
         fprintf(stderr, "sh: couldn't execute %s: %s\n", path, strerror(errno));
@@ -131,38 +166,9 @@ int run_binary(char *cmd, char **lexer) {
     // wait for child to terminate
     waitpid(child, NULL, 0);
 
-    // free the arglist
-    free_arglist(&arglist);
-
-    return 0;
-}
-
-/**
- * get the next token 0 success -1 overflow or invalid
- */
-int get_next_token(char **cursor, char *buf, size_t buf_len) {
-    // set buf to 0
-    memset(buf, 0, buf_len);
-    
-    if (cursor == NULL) return -1;
-    if (*cursor == NULL || **cursor == '\n') return -2;
-
-    // skip until next word
-    if (**cursor == ' ') {
-        while (*(++(*cursor)) == ' ');
-    }
-
-    for (size_t i = 0; **cursor != ' ' && **cursor != 0 && **cursor != '\n'; (*cursor)++, i++) {
-        if (i >= buf_len) {
-            return -1; // overflow
-        }
-        // copy to buffer
-        buf[i] = **cursor;
-    }
-
-    // go to next word
-    if (**cursor == ' ') {
-        while (*(++(*cursor)) == ' ');
+    // free path
+    if (!in_cwd) {
+        free(path);
     }
 
     return 0;
@@ -188,89 +194,6 @@ void display_cwd() {
     }
 }
 
-static int realloc_arglist(struct ArgList *arglist, int new_argcapacity) {
-    if (arglist == NULL || new_argcapacity <= arglist->argcapacity) { 
-        errno = EINVAL;
-        return -1; 
-    }
-
-    // try reallocating
-    int new_capacity = 2 * arglist->argcapacity + 1; // +1 to avoid the problem with 0 
-    char **new_argv = realloc(arglist->argv, new_capacity * sizeof(char *));
-
-    if (new_argv == NULL) {
-        return -1;
-    }
-
-    // success!!
-    arglist->argv = new_argv;
-    arglist->argcapacity = new_argcapacity;
-
-    return 0;
-}
-
-void free_arglist(struct ArgList *arglist) {
-    if (arglist == NULL) return;
-
-    for (int i = 0; i < arglist->argc; i++) {
-        if (arglist->argv[i] != NULL) {
-            free(arglist->argv[i]);
-            arglist->argv[i] = NULL;
-        }
-    }
-
-    free(arglist->argv);
-    arglist->argv = NULL;
-
-    arglist->argc        = 0;
-    arglist->argcapacity = 0;
-}
-
-int push_arg(struct ArgList *arglist, char *buf, size_t buf_len) {
-    if (arglist->argc + 1 >= arglist->argcapacity) {
-        if (realloc_arglist(arglist, arglist->argcapacity * 2 + 1) != 0) {
-            perror("sh: could not reallocate arglist");
-            return -1;
-        }
-    }
-
-    // push it to the argv
-    if (buf == NULL) {
-        arglist->argv[arglist->argc++] = NULL;
-        return 0;
-    }
-
-    char *arg = calloc(buf_len, sizeof(char));
-    strncpy(arg, buf, buf_len-1);
-    arglist->argv[arglist->argc++] = arg;
-    return 0;
-}
-
-/**
- * get the arguments as a list
- */
-int get_arglist(char **lexer, struct ArgList *arglist) {
-    if (arglist == NULL) {
-        errno = EINVAL;
-        return -1;
-    }
-
-    // no clue why...
-    char buf[512];
-
-    while (get_next_token(lexer, buf, sizeof(buf) - 1) == 0) {
-        if (push_arg(arglist, buf, sizeof(buf)) != 0) {
-            return -1;
-        }
-    }
-
-    if (push_arg(arglist, NULL, 0) != 0) {
-        return -1;
-    }
-
-    return 0;
-}
-
 /*******************************************************************************
  *                  BUILTIN COMMANDS SUCH AS CD                                *
  *******************************************************************************/
@@ -278,55 +201,44 @@ int get_arglist(char **lexer, struct ArgList *arglist) {
 /**
  * change the cwd to the one given in argument
  */
-void builtin_run_cd(char **lexer) {
-    char path[512]; // 512 max??
-    int success = get_next_token(lexer, path, sizeof(path) - 1);
+void builtin_run_cd(struct Command *cmd) {
+    if (cmd == NULL) return;
 
-    if (success == -1) {
-        fprintf(stderr, "cd: path shall be at most 511 characters long.\n");
+    // if end of stream
+    if (cmd->args.argc <= 1) {
+        free_command(cmd);
+        // default ~ aka home
+        if (chdir("/~") == -1) {
+            perror("cd: unable to go home, you screwed home up!");
+        }
         return;
     }
-    // if end of stream
-    else if (success == -2) {
-        // default ~ aka home
-        strcpy(path, "/~"); // 6 < 512 so no overflow possible!
-    }
 
-    if (strlen(path) >= 1 && path[0] == '~') {
-        char tmp[512];
-        strncpy(tmp, path, sizeof(tmp) - 1);
-        snprintf(path, sizeof(path) - 1, "/%s", tmp);
+    // get path
+    char *path;
+    size_t pathlen = strlen(cmd->args.argv[1]);
+
+    if (pathlen >= 1 && cmd->args.argv[1][0] == '~') {
+        path = calloc(pathlen + 2, sizeof(char)); // +1 for '/' +1 for null
+        snprintf(path, pathlen + 2, "/%s", cmd->args.argv[1]);
+    }
+    else {
+        path = cmd->args.argv[1];
     }
 
     // change the directory!
     if (chdir(path) == -1) {
         perror("cd: unable to change directory");
     }
+
+    if (cmd->args.argc > 2) {
+        fprintf(stderr, "cd: warning: cannot change to more than one directory\n");
+    }
+
+    free_command(cmd);
 }
 
-/**
- * list the current working directory
- */
-void builtin_run_ls(char **lexer) {
-    char path[512]; // 512 max??
-    int success = get_next_token(lexer, path, sizeof(path) - 1);
-
-    if (success == -1) {
-        fprintf(stderr, "path shall be at most 511 characters long.\n");
-        return;
-    }
-    // end of stream (aka no argument)
-    else if (success == -2) {
-        // list cwd
-        path[0] = '.';
-    }
-
-    if (strlen(path) >= 1 && path[0] == '~') {
-        char tmp[512];
-        strncpy(tmp, path, sizeof(tmp) - 1);
-        snprintf(path, sizeof(path) - 1, "/%s", tmp);
-    }
-
+static void list_dir(char *path) {
     // open the directory
     DIR *dir = opendir(path);
     if (dir == NULL) {
@@ -340,4 +252,47 @@ void builtin_run_ls(char **lexer) {
     }
 
     closedir(dir);
+}
+
+/**
+ * list the current working directory
+ */
+void builtin_run_ls(struct Command *cmd) {
+    if (cmd == NULL) return;
+
+    if (cmd->args.argc <= 1) {
+        // list cwd
+        list_dir(".");
+        return;
+    }
+
+    bool multiple_dirs = cmd->args.argc > 2;
+
+    for (int i = 1; i < cmd->args.argc; i++) {
+        char *path = cmd->args.argv[i];
+        size_t pathlen = strlen(path);
+
+        bool alloced = false;
+        if (pathlen >= 1 && path[0] == '~') {
+            path = calloc(pathlen + 2, sizeof(char)); // +1 for '/' +1 for null
+            snprintf(path, pathlen + 2, "/%s", cmd->args.argv[i]);
+            alloced = true;
+        }
+
+        if (multiple_dirs) {
+            printf("%s:\n", path);
+        }
+
+        list_dir(path);
+
+        if (multiple_dirs) {
+            printf("\n");
+        }
+
+        if (alloced) {
+            free(path);
+        }
+    }
+
+    free_command(cmd);
 }

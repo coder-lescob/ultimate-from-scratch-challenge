@@ -4,12 +4,14 @@
 #include <string.h>
 
 #include "interpreter.h"
+#include "lexer.h"
+#include "parser.h"
 
 int main(void) {
     char input[512]; // why 512? no clue
     
     // print a greating message
-    printf("Welcome to the ultimate \"from scratch\" challenge!\n\n");
+    printf("Welcome to the ultimate programming challenge!\n\n");
     int last_return_value = 0;
 
     while (1) {
@@ -20,7 +22,9 @@ int main(void) {
 
         // read input and interprete it!
         fgets(input, sizeof(input) - 1, stdin);
-        last_return_value = run_cmd(input);
+        struct Lexer lexer = { input };
+        struct Command cmd = parse_cmd(&lexer);
+        last_return_value = run_cmd(cmd);
     }   
 
     return 0;
