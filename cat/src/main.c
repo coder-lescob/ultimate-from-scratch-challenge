@@ -10,20 +10,13 @@ void print_content(char *path) {
         return;
     }
 
-    // get file length
-    fseek(fp, 0, SEEK_END);
-    size_t len = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
-
-    // +1 for null
-    char *file_content = calloc(len + 1, sizeof(char));
-    fread(file_content, 1, len, fp);
+    int ch;
+    while ((ch = fgetc(fp)) != EOF) {
+        putc(ch, stdout);
+    }
 
     // close file
     fclose(fp);
-    
-    // print file content
-    printf("%s", file_content);
 }
 
 int main(int argc, char **argv) {

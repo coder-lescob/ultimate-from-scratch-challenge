@@ -100,7 +100,6 @@ int run_binary(struct Command *cmd) {
         // file doesn't exist!!
         if (in_cwd) {
             fprintf(stderr, "sh: cannot execute %s: no such file or directory\n", path);
-            free(path);
             return 0;
         }
         free(path);
@@ -127,7 +126,7 @@ int run_binary(struct Command *cmd) {
             // redirect to there!
             int fd = open(cmd->fstdin, O_RDONLY);
             if (fd == -1) {
-                perror("sh: unable to redirect stream");
+                perror("sh: unable to redirect stdin");
                 exit(1);
             }
             dup2(fd, 0); // copy fd to stdin
@@ -139,7 +138,7 @@ int run_binary(struct Command *cmd) {
             // redirect to there!
             int fd = open(cmd->fstdout, O_WRONLY | O_CREAT | O_TRUNC);
             if (fd == -1) {
-                perror("sh: unable to redirect stream");
+                perror("sh: unable to redirect stdout/stderr");
                 exit(1);
             }
             dup2(fd, 1); // copy fd to stdout
@@ -149,23 +148,23 @@ int run_binary(struct Command *cmd) {
             if (fd > 2) close(fd);
         }
 
-        // new process here
         // fine linux will free it up for the child
         execv(path, cmd->args.argv);
 
         // oopsi
         fprintf(stderr, "sh: couldn't execute %s: %s\n", path, strerror(errno));
-        exit(1);
+        exit(1); // linux will still free the resources for the child
     }
     else if (child == -1) {
         // fork failed
         perror("sh: fork failed");
-        return 0;
+        goto cleanup;
     }
 
     // wait for child to terminate
     waitpid(child, NULL, 0);
 
+cleanup:
     // free path
     if (!in_cwd) {
         free(path);
@@ -206,21 +205,26 @@ void builtin_run_cd(struct Command *cmd) {
 
     // if end of stream
     if (cmd->args.argc <= 1) {
-        free_command(cmd);
         // default ~ aka home
         if (chdir("/~") == -1) {
             perror("cd: unable to go home, you screwed home up!");
         }
-        return;
+        goto end_cd;
     }
 
     // get path
     char *path;
     size_t pathlen = strlen(cmd->args.argv[1]);
+    bool free_path = false;
 
     if (pathlen >= 1 && cmd->args.argv[1][0] == '~') {
         path = calloc(pathlen + 2, sizeof(char)); // +1 for '/' +1 for null
+        if (path == NULL) {
+            perror("cd: unable to change directory");
+            goto end_cd;
+        }
         snprintf(path, pathlen + 2, "/%s", cmd->args.argv[1]);
+        free_path = true;
     }
     else {
         path = cmd->args.argv[1];
@@ -235,20 +239,25 @@ void builtin_run_cd(struct Command *cmd) {
         fprintf(stderr, "cd: warning: cannot change to more than one directory\n");
     }
 
+    if (free_path) {
+        free(path);
+    }
+
+end_cd:
     free_command(cmd);
 }
 
-static void list_dir(char *path) {
+static void list_dir(char *path, FILE *fp) {
     // open the directory
     DIR *dir = opendir(path);
     if (dir == NULL) {
-        perror("ls: could not open directory");
+        fprintf(fp, "ls: could not open directory: %s", strerror(errno));
         return;
     }
 
     struct dirent *entry;
     while ((entry = readdir(dir)) != NULL) {
-        printf("%s\n", entry->d_name);
+        fprintf(fp, "%s\n", entry->d_name);
     }
 
     closedir(dir);
@@ -260,10 +269,19 @@ static void list_dir(char *path) {
 void builtin_run_ls(struct Command *cmd) {
     if (cmd == NULL) return;
 
+    FILE *fp = stdout;
+    if (cmd->fstdout != NULL) {
+        fp = fopen(cmd->fstdout, "w");
+        if (fp == NULL) {
+            fprintf(stderr, "sh: unable to redirect stdout to %s: %s", cmd->fstdout, strerror(errno));
+            goto end_ls;
+        }
+    }
+
     if (cmd->args.argc <= 1) {
         // list cwd
-        list_dir(".");
-        return;
+        list_dir(".", fp);
+        goto end_ls;
     }
 
     bool multiple_dirs = cmd->args.argc > 2;
@@ -275,23 +293,33 @@ void builtin_run_ls(struct Command *cmd) {
         bool alloced = false;
         if (pathlen >= 1 && path[0] == '~') {
             path = calloc(pathlen + 2, sizeof(char)); // +1 for '/' +1 for null
+            if (path == NULL) {
+                fprintf(fp, "ls: couldn't format path: %s", strerror(errno));
+                goto end_ls;
+            }
             snprintf(path, pathlen + 2, "/%s", cmd->args.argv[i]);
             alloced = true;
         }
 
         if (multiple_dirs) {
-            printf("%s:\n", path);
+            fprintf(fp, "%s:\n", path);
         }
 
-        list_dir(path);
+        list_dir(path, fp);
 
         if (multiple_dirs) {
-            printf("\n");
+            fprintf(fp, "\n");
         }
 
         if (alloced) {
             free(path);
         }
+    }
+
+end_ls:
+    // close fp
+    if (cmd->fstdout != NULL) {
+        fclose(fp);
     }
 
     free_command(cmd);
