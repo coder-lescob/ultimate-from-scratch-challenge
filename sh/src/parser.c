@@ -57,7 +57,7 @@ struct Command parse_cmd(struct Lexer *lexer) {
                 break;
             default:
                 // just normal argument...
-                push_arg(&arglist, token.word, strlen(token.word) + 1); // +1 for null
+                push_arg(&arglist, token.word, strlen(token.word));
                 token_free(&token); // token has been copied to arglist free it!
                 break;
         }
@@ -146,12 +146,12 @@ int push_arg(struct ArgList *arglist, char *buf, size_t buf_len) {
     }
 
     // alloc arg
-    char *arg = calloc(buf_len, sizeof(char));
+    char *arg = calloc(buf_len + 1, sizeof(char));
     if (arg == NULL) {
         perror("sh: could not push arg to arglist");
         exit(1);
     }
-    strncpy(arg, buf, buf_len-1);
+    strncpy(arg, buf, buf_len);
     
     // push it!
     arglist->argv[arglist->argc++] = arg;
