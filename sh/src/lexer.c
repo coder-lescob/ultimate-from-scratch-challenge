@@ -35,11 +35,19 @@ struct Token lexer_next_token(struct Lexer *lexer) {
         if (*lexer->cursor == '\\') {
             escaped = true;
             lexer->cursor++;
+
+            if (is_blank(*lexer->cursor) || *lexer->cursor == 0) {
+                break;
+            }
         }
         
         if (*lexer->cursor == '"' && !escaped) {
             quote_opened = !quote_opened;
             lexer->cursor++;
+
+            if (is_blank(*lexer->cursor) || *lexer->cursor == 0) {
+                break;
+            }
         }
         
         if (i >= buf_len) {
