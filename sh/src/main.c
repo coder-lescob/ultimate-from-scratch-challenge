@@ -8,7 +8,7 @@
 #include "parser.h"
 
 int main(void) {
-    char input[512]; // why 512? no clue
+    char input[8096]; // why 8096? no clue
     
     // print a greating message
     printf("Welcome to the ultimate programming challenge!\n\n");
