@@ -50,8 +50,9 @@ mode_t parse_permissions(char *permissions, mode_t original_perms) {
             perms = remove_perm(perms, perm);
         }
         else {
-            fprintf(stderr, "chmod: unknown mode modifier '%c'\n", add_or_rm);
-            return original_perms; // user might have a bad experience if it parses the mode with an offset of 1...
+            // user might have a bad experience if it parses the mode with an offset of 1...
+            fprintf(stderr, "chmod: unknown mode modifier '%c', not modifying permissions\n", add_or_rm);
+            return original_perms; 
         }
     } 
     while (*(++permissions) != 0);
