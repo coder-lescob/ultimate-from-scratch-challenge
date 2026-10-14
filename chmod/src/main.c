@@ -41,6 +41,12 @@ mode_t parse_permissions(char *permissions, mode_t original_perms) {
     do {
         // get the '+' or '-' for add or remove permission
         char add_or_rm = *(permissions++);
+        if (*permissions == 0) {
+            fprintf(stderr, "chmod: warning: end of argument trailing null ignored\n");
+            break;
+        }
+
+        // get the mode from character
         mode_t perm    = get_mode_from_char(*permissions);
 
         if (add_or_rm == '+') {
