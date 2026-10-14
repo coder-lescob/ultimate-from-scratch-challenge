@@ -75,7 +75,7 @@ mode_t get_mode_from_char(char ch) {
         case 'x': return S_IXUSR; // Owner execute
 
         default:
-            fprintf(stderr, "chmod: warning: unknown permission '%c'\n", ch);
+            fprintf(stderr, "chmod: warning: unknown permission '%c', ignored\n", ch);
             return 0; // won't change the permission
     }
 }
