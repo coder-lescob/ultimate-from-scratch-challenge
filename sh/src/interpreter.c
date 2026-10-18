@@ -109,7 +109,6 @@ int run_binary(struct Command *cmd) {
     if (S_ISDIR(statbuffer.st_mode)) {
         if (in_cwd) {
             fprintf(stderr, "sh: cannot execute %s: is a directory\n", path);
-            free(path);
             return 0;
         }
         free(path);
