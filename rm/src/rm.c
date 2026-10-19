@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
+#include <unistd.h>
 
 struct Flags {
   unsigned int force: 1;
@@ -7,12 +9,19 @@ struct Flags {
 };
 
 struct Flags parse_flags(int argc, char **argv);
+int rm_entry(char *path, struct Flags flags);
 
 int main(int argc, char **argv) {
   // parse the flags
   struct Flags flags = parse_flags(argc, argv);
+  
+  for (int i = 1; i < argc; i++) {
+    if (strlen(argv[i]) == 0 || argv[i][0] == '-') continue;
 
-  printf("f: %d, r: %d\n", flags.force, flags.recusive);
+    if (rm_entry(argv[i], flags) != 0) {
+      fprintf(stderr, "rm: could not remove %s: %s\n", argv[i], strerror(errno));
+    }
+  }
 
   return 0;
 }
@@ -23,7 +32,7 @@ struct Flags parse_flags(int argc, char **argv) {
   void parse_flag_str(char *strf, struct Flags *flags);
   
   for (int i = 1; i < argc; i++) {
-    if (argv[i][0] != '-' || strlen(argv[i]) <= 1) continue;
+    if (strlen(argv[i]) <= 1 || argv[i][0] != '-') continue;
     
     // parse the flag str
     // len > 1 thus adding one to the string pointer just skips the first letter safely
@@ -43,7 +52,14 @@ void parse_flag_str(char *strf, struct Flags *flags) {
         break;
       case 'f':
         flags->force = 1;
-         break;
+        break;
     }
   }
+}
+
+int rm_entry(char *path, struct Flags flags) {
+  if (flags.recusive) {
+    return rmdir(path);
+  }
+  return unlink(path);
 }
