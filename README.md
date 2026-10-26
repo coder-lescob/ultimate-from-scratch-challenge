@@ -1,0 +1,3 @@
+# Ultimate Challenge
+
+This is an ultimate programming challenge. Using this distro to make anything usable here is the challenge, this distro is the most minimalist linux distro ever. It literally only consist of a minimalist custom shell. This shell can only run commands and it cannot interpret a bash script for example, no, no, when you type a command it just calls /bin/your-command with the given arguements. However, redirection of stdin and stdout/stderr is possible through the familiar syntax. Furthermore it runs inside a riscv32 qemu vm and has only basic tooling such as printf, cd, ls, exit, rm, cat and that's it! No compiler, no assembler. Just a raw shell. But obviously the challenge is still to code. good luck!
