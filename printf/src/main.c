@@ -12,9 +12,10 @@ int hex_to_num(char ch) {
 void print_formatted_str(char *str) {
     int escaped = 0;
     
-    do {
+    for (; *str != 0; str++) {
         if (*str == '\\') {
             escaped = 1;
+            
             str++;
 
             // avoid overflowing the buffer
@@ -36,8 +37,9 @@ void print_formatted_str(char *str) {
 
                 case 'x':
                     // interprete as hex the next two chars
-                    char a = hex_to_num(*(++str)) & 0xF;
-                    char b = hex_to_num(*(++str)) & 0xF;
+                    str++; // skip x
+                    char a = hex_to_num(*(str++)) & 0xF;
+                    char b = hex_to_num(*str) & 0xF;
 
                     // quick and dirty way
                     int hexn = (a << 4) + b;
@@ -54,7 +56,6 @@ void print_formatted_str(char *str) {
 
         escaped = 0;
     }
-    while (*(str++) != 0);
 }
 
 int main(int argc, char **argv) {
