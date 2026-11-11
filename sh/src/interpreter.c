@@ -250,7 +250,7 @@ static void list_dir(char *path, FILE *fp) {
     // open the directory
     DIR *dir = opendir(path);
     if (dir == NULL) {
-        fprintf(fp, "ls: could not open directory: %s", strerror(errno));
+        fprintf(fp, "ls: could not open directory '%s': %s\n", path, strerror(errno));
         return;
     }
 
@@ -272,7 +272,7 @@ void builtin_run_ls(struct Command *cmd) {
     if (cmd->fstdout != NULL) {
         fp = fopen(cmd->fstdout, "w");
         if (fp == NULL) {
-            fprintf(stderr, "sh: unable to redirect stdout to %s: %s", cmd->fstdout, strerror(errno));
+            fprintf(stderr, "sh: unable to redirect stdout to %s: %s\n", cmd->fstdout, strerror(errno));
             goto end_ls;
         }
     }
@@ -293,7 +293,7 @@ void builtin_run_ls(struct Command *cmd) {
         if (pathlen >= 1 && path[0] == '~') {
             path = calloc(pathlen + 2, sizeof(char)); // +1 for '/' +1 for null
             if (path == NULL) {
-                fprintf(fp, "ls: couldn't format path: %s", strerror(errno));
+                fprintf(fp, "ls: couldn't format path: %s\n", strerror(errno));
                 goto end_ls;
             }
             snprintf(path, pathlen + 2, "/%s", cmd->args.argv[i]);

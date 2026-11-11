@@ -84,7 +84,7 @@ int main(void) {
 
     // launch a shell
     if ((sh = fork()) == 0) {
-        // change the current working directory to /mnt
+        // change the current working directory to /~
         if (chdir("/~") != 0) {
             perror("sh: unable to change cwd to ~");
         };
