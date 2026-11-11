@@ -146,12 +146,13 @@ int push_arg(struct ArgList *arglist, char *buf, size_t buf_len) {
     }
 
     // alloc arg
-    char *arg = calloc(buf_len + 1, sizeof(char));
+    char *arg = calloc(buf_len + 2, sizeof(char));
     if (arg == NULL) {
         perror("sh: could not push arg to arglist");
         exit(1);
     }
     strncpy(arg, buf, buf_len);
+    arg[buf_len] = 0;
     
     // push it!
     arglist->argv[arglist->argc++] = arg;

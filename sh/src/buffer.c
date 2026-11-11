@@ -21,7 +21,6 @@ int setup_raw_mode(struct RawBuffer *buf) {
     // first disable line buffering and echo
     buf->new_conf.c_lflag &= ~(ICANON | ECHO | ISIG);
     buf->new_conf.c_iflag &= ~(IXON   | ICRNL);
-    buf->new_conf.c_lflag &= ~(OPOST);
 
     // then set the buffer reading threshold to 1 byte
     buf->new_conf.c_cc[VMIN] = 1;
@@ -51,7 +50,7 @@ int read_input_buf(struct InputBuf *buf) {
     bool escape_code = false;
     while ((ch = getchar()) != EOF) {
         if (ch == '\n' || ch == '\r') { 
-            putchar('\n'); 
+            putchar('\n');
             break; 
         }
         if (ch == CTRL_C) {
@@ -137,7 +136,8 @@ int read_input_buf(struct InputBuf *buf) {
             
             // rallocation failed
             if (new_buf == NULL) return -1;
-
+            
+            
             buf->buf = new_buf;
             buf->cap = new_cap;
         }
@@ -158,6 +158,8 @@ int read_input_buf(struct InputBuf *buf) {
 
         buf->buf[cursor++] = ch;
         buf->len++;
+
+        memset(buf->buf + buf->len, 0, buf->cap - buf->len);
     }
 
     return 0;

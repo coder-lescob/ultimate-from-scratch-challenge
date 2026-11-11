@@ -40,7 +40,7 @@ struct Token lexer_next_token(struct Lexer *lexer) {
             }
         }
         
-        if (i >= buf_len) {
+        if (i + 2 >= buf_len) {
             // we shall reallocate buffer
             size_t new_size = 2 * buf_len + 1;
             char *new_buf = realloc(buf, new_size + 1);
@@ -57,6 +57,7 @@ struct Token lexer_next_token(struct Lexer *lexer) {
 
         // push to buffer
         buf[i] = *lexer->cursor;
+        buf[i + 1] = 0;
     }
 
     if (is_blank(*lexer->cursor)) {
@@ -65,7 +66,7 @@ struct Token lexer_next_token(struct Lexer *lexer) {
 
     // create the token
     struct Token token = token_alloc(buf);
-
+    
     // free the temporary buffer
     free(buf); 
     buf = NULL;
