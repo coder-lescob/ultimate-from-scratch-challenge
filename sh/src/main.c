@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
+#include <signal.h>
 
 #include "interpreter.h"
 #include "lexer.h"
@@ -10,6 +11,8 @@
 #include "buffer.h"
 
 int main(void) {
+    signal(SIGINT, killchild);
+
     struct RawBuffer buf;
     if (setup_raw_mode(&buf) != 0) {
         perror("sh: could not setup raw mode");
@@ -42,7 +45,7 @@ int main(void) {
         // interprete it!
         struct Lexer lexer = { input.buf };
         struct Command cmd = parse_cmd(&lexer);
-        last_return_value = run_cmd(cmd);
+        last_return_value = run_cmd(cmd, &buf);
 
         // reset style to text mode
         printf("\017");

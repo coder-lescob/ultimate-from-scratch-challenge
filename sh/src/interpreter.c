@@ -17,10 +17,22 @@
 #include <sys/stat.h>
 #include <sys/stat.h>
 
+pid_t child = -1;
+
+/**
+ * kill the child process
+ */
+void killchild(int sig) {
+    (void)sig;
+    exit(1);
+    if (child != -1)
+        kill(child, SIGINT);
+}
+
 /**
  * runs a command in the terminal
  */
-int run_cmd(struct Command command) {
+int run_cmd(struct Command command, struct RawBuffer *raw) {
 
     // EOS nothing there to show
     if (command.cmd == NULL) {
@@ -55,7 +67,7 @@ int run_cmd(struct Command command) {
         return 0;
     }
 
-    if (run_binary(&command) == 0) {
+    if (run_binary(&command, raw) == 0) {
         free_command(&command);
         return 0; // success!!
     }
@@ -69,7 +81,7 @@ int run_cmd(struct Command command) {
 /**
  * try to run the command from a binary in /bin
  */
-int run_binary(struct Command *cmd) {
+int run_binary(struct Command *cmd, struct RawBuffer *raw) {
     if (cmd == NULL) return -1;
 
     // get the path
@@ -117,9 +129,18 @@ int run_binary(struct Command *cmd) {
 
     // push NULL to statisfy execve
     push_arg(&cmd->args, NULL, 0);
+    
+    if (restore_normal_mode(raw) != 0) {
+        perror("sh: unable to put back the child in normal mode");
+        exit(1);
+    }
 
-    pid_t child;
     if ((child = fork()) == 0) {
+        // undo the handlers
+        signal(SIGINT, SIG_DFL);
+        signal(SIGQUIT, SIG_DFL);
+        signal(SIGTTOU, SIG_DFL);
+
         // redirection
         if (cmd->fstdin != NULL) {
             // redirect to there!
@@ -164,6 +185,11 @@ int run_binary(struct Command *cmd) {
     waitpid(child, NULL, 0);
 
 cleanup:
+    if (setup_raw_mode(raw) != 0) {
+        perror("sh: could not restore raw mode");
+        exit(1);
+    }
+
     // free path
     if (!in_cwd) {
         free(path);
