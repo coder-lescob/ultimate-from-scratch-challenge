@@ -2,3 +2,5 @@ build/
 disk/
 toolchain/
 .editorconfig
+kernel/
+rootfs/
