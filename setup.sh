@@ -56,7 +56,7 @@ fi
 
 # export gcc
 export PATH="$HOME/opt/riscv32/bin:$PATH"
-CROSS_COMPILE_HEAD="$TOOLCHAIN/riscv32-unknown-linux-gnu-"
+CROSS_COMPILE_HEAD="riscv32-unknown-linux-gnu-"
 
 # first install the kernel if we need to
 KDIR="kernel"
@@ -86,7 +86,7 @@ else
     make -C "${KDIR}/${KERNEL}" -j"$(nproc)" $CROSS_FLAGS
 
     # make a symbolic link
-    ln -s "${KDIR}/${KERNEL}/arch/riscv/boot/Image" "${KDIR}/Image"
+    cp "${KDIR}/${KERNEL}/arch/riscv/boot/Image" "$KDIR"
 fi
 
 DISK="disk/disk.img"
