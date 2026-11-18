@@ -49,7 +49,7 @@ else
     cd "$TOOLCHAIN"
     git clone https://github.com/riscv-collab/riscv-gnu-toolchain.git
 
-    # configure the build system
+    # configure the build system and run it
     ./configure --prefix="$HOME/opt/riscv32" --with-arch=rv32ima --with-abi=ilp32
     cd ..
 fi
@@ -85,7 +85,7 @@ else
     make -C "${KDIR}/${KERNEL}" $CROSS_FLAGS olddefconfig
     make -C "${KDIR}/${KERNEL}" -j"$(nproc)" $CROSS_FLAGS
 
-    # make a symbolic link
+    # copy the kernel image
     cp "${KDIR}/${KERNEL}/arch/riscv/boot/Image" "$KDIR"
 fi
 
