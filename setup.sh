@@ -48,10 +48,11 @@ else
     # clone the repo
     cd "$TOOLCHAIN"
     git clone https://github.com/riscv-collab/riscv-gnu-toolchain.git
-    cd "$TOOLCHAIN/riscv-gnu-toolchain"
+    cd "riscv-gnu-toolchain"
 
     # configure the build system and run it
     ./configure --prefix="$HOME/opt/riscv32" --with-arch=rv32ima --with-abi=ilp32
+    make
     cd ../..
 fi
 
