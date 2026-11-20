@@ -59,9 +59,7 @@ else
       --enable-linux \
       --with-arch=rv32ima --with-abi=ilp32 \
       --with-languages=c --disable-gdb
-    rm -f stamps/build-gcc-linux-stage1
-    rm -rf build-gcc-linux-stage1
-    make -j"$(nproc)" stamps/build-gcc-linux-stage1
+    make -j"$(nproc)" linux
     cd ../..
 fi
 
