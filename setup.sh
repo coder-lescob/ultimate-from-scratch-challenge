@@ -38,8 +38,9 @@ if ! command -v qemu-system-riscv32 >/dev/null; then
 fi
 
 TOOLCHAIN="toolchain"
+TOOLCHAIN_INSTALL="$HOME/opt/riscv32/"
 
-if find "$HOME/opt/riscv32/bin/riscv32-unknown-linux-gnu-gcc" >/dev/null; then
+if find "$TOOLCHAIN_INSTALL/bin/riscv32-unknown-linux-gnu-gcc" >/dev/null; then
     echo "risc-v toolchain already installed, nothing to do"
 else
     echo "risc-v toolchain not installed, proceding to installation, this may take a while"
@@ -54,7 +55,7 @@ else
 
     # configure the build system and run it
     # only build riscv32-unknown-linux-gnu-gcc
-    ./configure --prefix="$HOME/riscv" \
+    ./configure --prefix="$TOOLCHAIN_INSTALL" \
       --enable-linux \
       --with-arch=rv32ima --with-abi=ilp32 \
       --with-languages=c --disable-gdb
@@ -65,7 +66,7 @@ else
 fi
 
 # export gcc
-export PATH="$HOME/opt/riscv32/bin:$PATH"
+export PATH="$TOOLCHAIN_INSTALL/bin:$PATH"
 CROSS_COMPILE_HEAD="riscv32-unknown-linux-gnu-"
 
 # first install the kernel if we need to
