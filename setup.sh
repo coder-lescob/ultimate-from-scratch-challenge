@@ -75,6 +75,20 @@ if [[ -d "$KDIR" ]]; then
     echo "Kernel already installed nothing to do"
 else
     echo "Kernel not installed proceding to installation, this may take a while"
+
+    # verify if bc is installed otherwise install it 
+    if ! command -v bc >/dev/null; then
+        if command -v pacman >/dev/null; then
+            sudo pacman -S --needed bc
+        elif command -v apt >/dev/null; then
+            sudo apt install bc
+        elif command -v dnf >/dev/null; then
+            sudo dnf install bc
+        else
+            echo "Could not resolve host package manager, please install manually the package `bc`"
+            exit 1
+        fi
+    fi
     
     # the version of the kernel to download
     KVER="7.3.2"
