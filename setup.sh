@@ -8,11 +8,11 @@ if ! command -v git >/dev/null; then
     # if not install git
     echo "git is not installed, proceding for install"
 
-    if command -v pacman; then
+    if command -v pacman >/dev/null; then
         sudo pacman -S --needed git
-    elif command -v apt; then
+    elif command -v apt >/dev/null; then
         sudo apt install git
-    elif command -v dnf; then
+    elif command -v dnf >/dev/null; then
         sudo dnf install git
     else
         echo "your package manager is not supported. try to install the package `git` manually"
@@ -24,11 +24,11 @@ if ! command -v qemu-system-riscv32 >/dev/null; then
     # install it
     echo "qemu is not installed, installing..."
 
-    if command -v pacman; then
+    if command -v pacman >/edv/null; then
         sudo pacman -S --needed qemu-system-riscv qemu-img
-    elif command -v apt; then
+    elif command -v apt >/dev/null; then
         sudo apt install qemu-system-riscv qemu-utils
-    elif command -v dnf; then
+    elif command -v dnf >/dev/null; then
         sudo dnf install qemu-system-riscv qemu-img
     else
         echo "your package manager is not supported. try to install the package `qemu-system-riscv` manually"
@@ -51,8 +51,12 @@ else
     cd "riscv-gnu-toolchain"
 
     # configure the build system and run it
-    ./configure --prefix="$HOME/opt/riscv32" --with-arch=rv32ima --with-abi=ilp32
-    make
+    # only build riscv32-unknown-linux-gnu-gcc
+    ./configure --prefix="$HOME/riscv" \
+      --enable-linux \
+      --with-arch=rv32ima --with-abi=ilp32 \
+      --with-languages=c --disable-gdb
+    make -j"$(nproc)" build-gcc1 # should be faster with enough processes e.i. nproc
     cd ../..
 fi
 
