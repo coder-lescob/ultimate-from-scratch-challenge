@@ -3,6 +3,11 @@
 # error handling
 set -euo pipefail
 
+fail_resolve_package_manager() {
+    echo "Could not resolve host package manager, please install manually the package(s) $* and rerun this script"
+    exit 1
+}
+
 # verify git is available
 if ! command -v git >/dev/null; then
     # if not install git
@@ -15,8 +20,7 @@ if ! command -v git >/dev/null; then
     elif command -v dnf >/dev/null; then
         sudo dnf install git
     else
-        echo "your package manager is not supported. try to install the package `git` manually and rerunning this etup script"
-        exit 1
+        fail_resolve_package_manager git
     fi
 fi
 
@@ -32,8 +36,7 @@ if ! command -v qemu-system-riscv32 >/dev/null; then
     elif command -v dnf >/dev/null; then
         sudo dnf install qemu-system-riscv qemu-img
     else
-        echo "your package manager is not supported. try to install the packages `qemu-system-riscv` and `qemu-img` manually and rerunning this setup script"
-        exit 1
+        fail_resolve_package_manager qemu-system-riscv qemu-img
     fi
 fi
 
@@ -83,8 +86,7 @@ else
         elif command -v dnf >/dev/null; then
             sudo dnf install bc
         else
-            echo "Could not resolve host package manager, please install manually the package `bc`"
-            exit 1
+            fail_resolve_package_manager bc
         fi
     fi
     
