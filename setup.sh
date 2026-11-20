@@ -15,7 +15,8 @@ if ! command -v git >/dev/null; then
     elif command -v dnf >/dev/null; then
         sudo dnf install git
     else
-        echo "your package manager is not supported. try to install the package `git` manually"
+        echo "your package manager is not supported. try to install the package `git` manually and rerunning this etup script"
+        exit 1
     fi
 fi
 
@@ -31,7 +32,8 @@ if ! command -v qemu-system-riscv32 >/dev/null; then
     elif command -v dnf >/dev/null; then
         sudo dnf install qemu-system-riscv qemu-img
     else
-        echo "your package manager is not supported. try to install the package `qemu-system-riscv` manually"
+        echo "your package manager is not supported. try to install the packages `qemu-system-riscv` and `qemu-img` manually and rerunning this setup script"
+        exit 1
     fi
 fi
 
