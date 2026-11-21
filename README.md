@@ -32,4 +32,4 @@ And a qemu window should appear with my beautiful shell inside.
 
 ## Objectives
 
-The objective of this project is purely educative both for it's developers and for it's users. As it is, no AI pull request will be accepted. That said, the next things to do is to actually build an iso before sending it to qemu instead of using a cpio archive which is fine for now.
+The objective of this project is purely educative both for it's developers and for it's users. As it is, no AI pull request will be accepted. That said, the next things to do is to put the distro in a usable disk image that could be later used to lauch qemu and even on real hardware.
